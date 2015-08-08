@@ -1,0 +1,23 @@
+# configuration file example
+# imdb site name
+host: www.imdb.com
+# list of paths on the site
+paths:
+  top: /chart/top
+  western_top: /genre/western
+# webdriver configuration
+webdriver:
+  # webdriver run mode. remote or local
+  mode: local
+  # configuration for remote mode
+  remote:
+    port: 4444
+    host: 127.0.0.1
+    # could be either selenium.webdriver.common.desired_capabilities.DesiredCapabilities attribute name where default desired capabilities stored
+    # or array of your own desired capabilities
+#    desired_capabilities:
+#      browserName: firefox
+#      version: ""
+#      platform: ANY
+#      javascriptEnabled: true
+    desired_capabilities: FIREFOX
