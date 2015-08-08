@@ -10,7 +10,7 @@ def pytest_addoption(parser):
     parser.addoption("--cfg", action="store", help="path to configuration file")
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def config(request):
     '''Returns content of configuration file.
        Now supports only yaml format'''
@@ -31,7 +31,7 @@ def config(request):
     return parsed_configuration
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def driver(request, config):
     '''returns WebDriver instance depending on configuration'''
     webdriver_config = config.get('webdriver', {})
