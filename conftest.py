@@ -1,25 +1,24 @@
 # coding: UTF-8
 
+import os
 import pytest
-import yaml
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from page_objects.imdb_navigator import IMDbNavigator
 
 
 def pytest_addoption(parser):
     parser.addoption("--cfg", action="store", help="path to configuration file")
 
 
-@pytest.fixture(scope='module')
-def config(request):
-    '''Returns content of configuration file.
-       Now supports only yaml format'''
-    configuration_file_path = request.config.getoption("--cfg")
+def load_yaml(configuration_file_path):
+    # yaml package needed only in case if configuration file is in yaml format
+    import yaml
 
-    if configuration_file_path == None:
-        raise ConfigurationException('Configuration file path is not specified. Please, specify path to configuration file, using --cfg command line option.')
-
-    cfg_file = open(configuration_file_path, 'r')
+    try:
+        cfg_file = open(configuration_file_path, 'r')
+    except BaseException as e:
+        raise ConfigurationException('Can not open configuration file', e)
 
     try:
         parsed_configuration = yaml.load(cfg_file)
@@ -32,12 +31,32 @@ def config(request):
 
 
 @pytest.fixture(scope='module')
+def config(request):
+    '''Returns content of configuration file.
+       Now supports only yaml format'''
+    configuration_file_path = request.config.getoption("--cfg")
+
+    if configuration_file_path == None:
+        parsed_configuration = {}
+    else:
+        configuration_file_name, configuration_file_type = os.path.splitext(configuration_file_path)
+
+        if configuration_file_type == 'yaml':
+            parsed_configuration = load_yaml(configuration_file_path)
+        else:
+            raise RuntimeError('Unknown configuration file format: {}\n'
+                               'Only yaml is possible now'.format(configuration_file_type))
+
+    return parsed_configuration
+
+
+@pytest.fixture(scope='module')
 def driver(request, config):
     '''returns WebDriver instance depending on configuration'''
     webdriver_config = config.get('webdriver', {})
     webdriver_mode = webdriver_config.get('mode', 'local')
     if webdriver_mode == 'remote':
-        desired_capabilities = config['webdriver']['remote']['desired_capabilities']
+        desired_capabilities = webdriver_config.get('remote', {}).get('desired_capabilities', DesiredCapabilities.FIREFOX)
 
         if isinstance(desired_capabilities, str):
             desired_capabilities = getattr(DesiredCapabilities, desired_capabilities)
@@ -61,8 +80,13 @@ def driver(request, config):
         driver.close()
 
     request.addfinalizer(fin)
-
     return driver
+
+
+@pytest.fixture(scope='module')
+def navigator(config, driver):
+    '''returns WebDriver instance depending on configuration'''
+    return IMDbNavigator(config.get('host', 'www.imdb.com'), driver)
 
 
 class ConfigurationException(Exception):

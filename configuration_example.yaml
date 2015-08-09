@@ -1,13 +1,10 @@
 # configuration file example
 # imdb site name
 host: www.imdb.com
-# list of paths on the site
-paths:
-  top: /chart/top
-  western_top: /genre/western
 # webdriver configuration
 webdriver:
   # webdriver run mode. remote or local
+#  mode: remote
   mode: local
   # configuration for remote mode
   remote:
