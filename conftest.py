@@ -1,10 +1,25 @@
 # coding: UTF-8
 
 import os
+import time
+import random
+import string
 import pytest
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from page_objects.imdb_navigator import IMDbNavigator
+
+
+logger = logging.Logger(name=__name__)
+
+
+class Webdrivers:
+    FIREFOX = webdriver.Firefox
+    IE = webdriver.Ie
+    EDGE = webdriver.Edge
+    CHROME = webdriver.Opera
+    SAFARI = webdriver.Safari
 
 
 def pytest_addoption(parser):
@@ -73,8 +88,8 @@ def driver(request, config):
                                           'desired_capabilities: {dc}'.format(host=driver_host, port=driver_port, dc=desired_capabilities), e)
 
     elif webdriver_mode == 'local':
-        # TODO allow a better choice of drivers
-        driver = webdriver.Firefox()
+        desired_webdriver = webdriver_config.get('local', 'FIREFOX')
+        driver = getattr(Webdrivers, desired_webdriver)()
 
     def fin():
         driver.close()
@@ -87,6 +102,46 @@ def driver(request, config):
 def navigator(config, driver):
     '''returns WebDriver instance depending on configuration'''
     return IMDbNavigator(config.get('host', 'www.imdb.com'), driver)
+
+
+@pytest.mark.tryfirst
+def pytest_runtest_makereport(item, call, __multicall__):
+    '''
+    this magic allows to have information about test result in fixture finalizer
+    '''
+    # execute all other hooks to obtain the report object
+    rep = __multicall__.execute()
+    # rep.when is one of 'setup', 'call', 'teardown'
+    setattr(item, "rep_" + rep.when, rep)
+    return rep
+
+
+@pytest.fixture(scope='function', autouse=True)
+def take_screenshot_on_failure(request, driver):
+    '''
+    Automatically makes screenshot on test failure (needs pytest_runtest_makereport)
+    '''
+    def fin():
+        # request.node is item from pytest_runtest_makereport
+        if request.node.rep_setup.failed or request.node.rep_call.failed:
+
+            if not os.path.exists('report'):
+                os.mkdir('report')
+            if not os.path.exists(os.path.join('report', 'screenshots')):
+                os.mkdir(os.path.join('report', 'screenshots'))
+
+            ts = time.strftime('%Y-%m-%d %H-%M-%S')
+            rnd = ''.join([random.choice(string.ascii_lowercase + string.digits) for i in range(4)])
+            screenshot_name = '{ts} {rnd}.png'.format(ts=ts, rnd=rnd)
+            screenshot_path = os.path.join('report', 'screenshots', screenshot_name)
+            screenshot_result = driver.get_screenshot_as_file(screenshot_path)
+
+            if screenshot_result:
+                logger.log(logging.DEBUG, 'Screenshot taken after failure. Screenshot file name: {}'.format(screenshot_name))
+            else:
+                logger.log(logging.DEBUG, 'Screenshot failed')
+
+    request.addfinalizer(fin)
 
 
 class ConfigurationException(Exception):

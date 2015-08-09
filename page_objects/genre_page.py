@@ -1,6 +1,6 @@
 # coding: UTF-8
 
-from page_objects.base_imdb_page import BaseIMDbPage
+from page_objects.base_imdb_page import BaseIMDbPage, action_log
 
 
 class TopTable:
@@ -12,6 +12,7 @@ class TopTable:
         self._table = element
 
 
+    @action_log('Searching for top table rows')
     def get_rows(self):
         '''
         :return: list of table rows
@@ -29,6 +30,7 @@ class GenrePage(BaseIMDbPage):
     path = '/chart/top'
 
 
+    @action_log('Searching for top table')
     def get_top_table(self):
         '''
         :return: top table

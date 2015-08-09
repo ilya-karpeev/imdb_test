@@ -28,12 +28,13 @@ def test_top_250(top_250_page):
     SortType.IMDB_RATING,
     SortType.RELEASE_DATE,
     SortType.NUMBER_OF_RATINGS,
-    SortType.YOUR_RATING])
+    SortType.YOUR_RATING
+])
 @pytest.mark.parametrize('sort_order', [
     SortOrder.ASCENDING,
     SortOrder.DESCENDING,
 ])
-def test_top_250_sorting(sort_type, sort_order, top_250_page):
+def test_top_250_sorting(sort_type, sort_order, top_250_page, driver):
     '''
     The Top 250 page returns at least 1 movie in the list for all sorting options
     '''

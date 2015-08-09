@@ -1,7 +1,7 @@
 # coding: UTF-8
 
 from selenium.webdriver.support.select import Select
-from page_objects.base_imdb_page import BaseIMDbPage
+from page_objects.base_imdb_page import BaseIMDbPage, action_log
 
 
 class SortType:
@@ -18,10 +18,14 @@ class SortOrder:
 
 
 class Top250Table:
+    '''
+    Represents "Top 250" table
+    '''
     def __init__(self, element):
         self._table = element
 
 
+    @action_log('Searching for "Top 250" table rows')
     def get_rows(self):
         '''
         :return: list of table rows
@@ -35,6 +39,7 @@ class Top250Table:
         return table_rows
 
 
+    @action_log('Searching for sorting control on "Top 250" table')
     def get_sorting_control(self):
         '''
         :return: list sorting control with sorting type dropdown and sort order span on it
@@ -48,6 +53,7 @@ class Top250Table:
         return sorting
 
 
+    @action_log('Searching for "sort by" control on "Top 250" table')
     def get_sort_by_select(self):
         '''
         :return: sorting type dropdown list
@@ -58,6 +64,7 @@ class Top250Table:
         return sort_by_select
 
 
+    @action_log('Searching for "sort order" control on "Top 250" table')
     def get_sort_order_span(self):
         '''
         :return: sort order span
@@ -68,6 +75,7 @@ class Top250Table:
         return sort_order_span
 
 
+    @action_log('Choosing {1} sort order on "Top 250" table')
     def set_sort_order(self, sort_order):
         '''
         Chooses specified sorting order by clicking sort order span.
@@ -82,6 +90,7 @@ class Top250Table:
         return self
 
 
+    @action_log('Selecting {1} sort type on "Top 250" table')
     def set_sort_type(self, sort_type):
         '''
         Chooses specified sorting type by selecting item from sort type dropdown
@@ -141,6 +150,7 @@ class GenreLinksPanel:
         self._panel = element
 
 
+    @action_log('Searching for "{1}" genre link on "Top Movies by Genre" sidebar panel')
     def get_genre_link(self, genre_name):
         '''
         :param genre_name: name of the genre
@@ -151,6 +161,7 @@ class GenreLinksPanel:
         return genre_link
 
 
+    @action_log('Clicking on "{1}" genre link on "Top Movies by Genre" sidebar panel')
     def navigate_genre(self, genre_name):
         '''
         Clicks on specified genre link
@@ -166,6 +177,7 @@ class Top250Page(BaseIMDbPage):
     path = '/chart/top'
 
 
+    @action_log('Searching for "Top 250" table on "Top 250" page')
     def get_top_table(self):
         '''
         :return: top 250 table
@@ -176,6 +188,7 @@ class Top250Page(BaseIMDbPage):
         return Top250Table(table)
 
 
+    @action_log('Searching for "Top Movies by Genre" panel on the sidebar of "Top 250" page')
     def get_genre_panel(self):
         '''
         :return: sidebar genre panel
