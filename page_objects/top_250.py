@@ -1,6 +1,7 @@
 # coding: UTF-8
 
 from selenium.webdriver.support.select import Select
+from page_objects.base_imdb_page import BaseIMDbPage
 
 
 class SortType:
@@ -16,57 +17,34 @@ class SortOrder:
     DESCENDING = 'descending'
 
 
-class Top250Page:
-    path = '/chart/top'
-
-    def __init__(self, driver):
-        '''
-        :param selenium.webdriver.remote.webdriver.WebDriver driver: WebDriver instance
-        '''
-        self._driver = driver
+class Top250Table:
+    def __init__(self, element):
+        self._table = element
 
 
-    def get_top_table(self):
+    def get_rows(self):
         '''
-        :return: top 250 table
-        :rtype: selenium.webdriver.remote.webelement.WebElement
-        '''
-        table = self._driver.find_element_by_xpath('/html'
-                                                   '/body'
-                                                   '/div[@id="wrapper"]'
-                                                   '/div[@id="root" and @class="redesign"]'
-                                                   '/div[@id="pagecontent"]'
-                                                   '/div[@id="content-2-wide" and @class="redesign"]'
-                                                   '/div[@id="main"]'
-                                                   '/div[@class="seen-collection" and @data-collectionid="top-250"]')
-        return table
-
-
-    def get_top_table_rows(self):
-        '''
-        :return: List of top 250 table rows
+        :return: list of table rows
         :rtype: list of selenium.webdriver.remote.webelement.WebElement
         '''
-        table = self.get_top_table()
-        table_rows = table.find_elements_by_xpath('./div[@class="article"]'
-                                                  '/div[@class="lister"]'
-                                                  '/table[@class="chart"]'
-                                                  '/tbody'
-                                                  '/tr[td[@class="titleColumn"]/a[@title]]')
+        table_rows = self._table.find_elements_by_xpath('./div[@class="article"]'
+                                                        '/div[@class="lister"]'
+                                                        '/table[@class="chart"]'
+                                                        '/tbody'
+                                                        '/tr[td[@class="titleColumn"]/a[@title]]')
         return table_rows
 
 
     def get_sorting_control(self):
         '''
         :return: list sorting control with sorting type dropdown and sort order span on it
-        :rtype: list of selenium.webdriver.remote.webelement.WebElement
+        :rtype: selenium.webdriver.remote.webelement.WebElement
         '''
-        table = self.get_top_table()
-        sorting = table.find_element_by_xpath('./div[@class="article"]'
-                                              '/div[@class="lister"]'
-                                              '/div[@class="header"]'
-                                              '/div[@class="nav"]'
-                                              '/div[@class="controls float-right lister-activated"]')
+        sorting = self._table.find_element_by_xpath('./div[@class="article"]'
+                                                    '/div[@class="lister"]'
+                                                    '/div[@class="header"]'
+                                                    '/div[@class="nav"]'
+                                                    '/div[@class="controls float-right lister-activated"]')
         return sorting
 
 
@@ -91,6 +69,11 @@ class Top250Page:
 
 
     def set_sort_order(self, sort_order):
+        '''
+        Chooses specified sorting order by clicking sort order span.
+        If sort order already as sort_order then does nothing.
+        :param str sort_order: orting order. could be ascending or descending
+        '''
         sort_order_span = self.get_sort_order_span()
 
         if sort_order not in sort_order_span.get_attribute('class'):
@@ -100,33 +83,103 @@ class Top250Page:
 
 
     def set_sort_type(self, sort_type):
+        '''
+        Chooses specified sorting type by selecting item from sort type dropdown
+        :param str sort_type: sorting type
+        '''
         sort_by_select = self.get_sort_by_select()
         sort_by_select.select_by_visible_text(sort_type)
         return self
 
 
     def set_sort(self, sort_type, sort_order):
+        '''
+        Chooses specified sorting type and sort order
+        :param str sort_type: sorting type
+        :param str sort_order: orting order. could be ascending or descending
+        '''
         # first sort type then sort order, cause sort order is reset when sort type is changed
         return self.set_sort_type(sort_type).set_sort_order(sort_order)
 
 
-    def get_genre_panel(self):
-        genre_panel = self._driver.find_element_by_xpath('/html'
-                                                         '/body'
-                                                         '/div[@id="wrapper"]'
-                                                         '/div[@id="root" and @class="redesign"]'
-                                                         '/div[@id="pagecontent"]'
-                                                         '/div[@id="content-2-wide" and @class="redesign"]'
-                                                         '/div[@id="sidebar"]'
-                                                         '/div[@class="aux-content-widget-2 links subnav" and h3="Top Movies by Genre"]')
-        return genre_panel
+class GenreNames:
+    '''
+    Names of genres
+    '''
+    ACTION = 'Action'
+    ADVENTURE = 'Adventure'
+    ANIMATION = 'Animation'
+    BIOGRAPHY = 'Biography'
+    COMEDY = 'Comedy'
+    CRIME = 'Crime'
+    DOCUMENTARY = 'Documentary'
+    DRAMA = 'Drama'
+    FAMILY = 'Family'
+    FANTASY = 'Fantasy'
+    FILM_NOIR = 'Film-Noir'
+    HISTORY = 'History'
+    HORROR = 'Horror'
+    MUSIC = 'Music'
+    MUSICAL = 'Musical'
+    MYSTERY = 'Mystery'
+    ROMANCE = 'Romance'
+    SCI_FI = 'Sci-Fi'
+    SHORT = 'Short'
+    SPORT = 'Sport'
+    THRILLER = 'Thriller'
+    WAR = 'War'
+    WESTERN = 'Western'
+
+
+class GenreLinksPanel:
+    '''
+    Represents "Top Movies by Genre" sidebar panel
+    '''
+    header = 'Top Movies by Genre'
+
+    def __init__(self, element):
+        self._panel = element
 
 
     def get_genre_link(self, genre_name):
-        genre_panel = self.get_genre_panel()
-        genre_link = genre_panel.find_element_by_xpath('./ul/li/a[contains(., "{genre}")]'.format(genre=genre_name))
+        '''
+        :param genre_name: name of the genre
+        :return: genre link
+        :rtype: WebElement
+        '''
+        genre_link = self._panel.find_element_by_xpath('./ul/li/a[contains(., "{genre}")]'.format(genre=genre_name))
         return genre_link
 
 
     def navigate_genre(self, genre_name):
+        '''
+        Clicks on specified genre link
+        :param genre_name: name of the genre
+        '''
         self.get_genre_link(genre_name).click()
+
+
+class Top250Page(BaseIMDbPage):
+    '''
+    Represents www.imdb.com/chart/top page
+    '''
+    path = '/chart/top'
+
+
+    def get_top_table(self):
+        '''
+        :return: top 250 table
+        :rtype: Top250Table
+        '''
+        table = self._driver.find_element_by_xpath('//div[@id="main"]'
+                                                   '/div[@class="seen-collection" and @data-collectionid="top-250"]')
+        return Top250Table(table)
+
+
+    def get_genre_panel(self):
+        '''
+        :return: sidebar genre panel
+        :rtype: GenreLinksPanel
+        '''
+        genre_panel = self.find_links_subnav_by_header(GenreLinksPanel.header)
+        return GenreLinksPanel(genre_panel)
